@@ -13,7 +13,7 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# Local variables for consistent tagging
+# Local variables
 locals {
   common_tags = {
     Environment = var.environment

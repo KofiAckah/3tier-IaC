@@ -4,7 +4,7 @@
 # - Ingress Rules for Allowed Traffic Per Tier
 # Uses modern aws_vpc_security_group_ingress_rule resources
 
-# Local variables for cleaner code
+# Local variables
 locals {
   common_tags = {
     Environment = var.environment

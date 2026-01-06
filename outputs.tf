@@ -56,3 +56,24 @@ output "all_security_groups" {
   description = "All security group IDs"
   value       = module.security.all_sg_ids
 }
+
+# ALB Outputs
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = module.alb.alb_dns_name
+}
+
+output "alb_arn" {
+  description = "ARN of the Application Load Balancer"
+  value       = module.alb.alb_arn
+}
+
+output "target_group_arn" {
+  description = "ARN of the target group"
+  value       = module.alb.target_group_arn
+}
+
+output "alb_info" {
+  description = "Complete ALB information"
+  value       = module.alb.alb_info
+}
