@@ -8,14 +8,17 @@
 # - NAT Gateway
 # - Route Tables
 
-# Outputs:
-# - VPC ID
-# - Subnets per tier
-# - Route table IDs
-
 # Data source to fetch available AZs
 data "aws_availability_zones" "available" {
   state = "available"
+}
+
+# Local variables for consistent tagging
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }
 
 # VPC
@@ -25,9 +28,10 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-vpc"
+      Name = "${var.project_name}-${var.environment}-vpc"
     }
   )
 }
@@ -37,22 +41,24 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-igw"
+      Name = "${var.project_name}-${var.environment}-igw"
     }
   )
 }
 
 # Elastic IP for NAT Gateway
 resource "aws_eip" "nat_eip" {
-  domain = "vpc"
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.igw]
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-nat-eip"
+      Name = "${var.project_name}-${var.environment}-nat-eip"
     }
   )
 }
@@ -63,9 +69,10 @@ resource "aws_nat_gateway" "nat" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-nat-gateway"
+      Name = "${var.project_name}-${var.environment}-nat-gateway"
     }
   )
 
@@ -81,9 +88,10 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-public-subnet-${count.index + 1}"
+      Name = "${var.project_name}-${var.environment}-public-subnet-${count.index + 1}"
       Tier = "Public"
     }
   )
@@ -97,9 +105,10 @@ resource "aws_subnet" "private_app" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-private-app-subnet-${count.index + 1}"
+      Name = "${var.project_name}-${var.environment}-private-app-subnet-${count.index + 1}"
       Tier = "Application"
     }
   )
@@ -113,9 +122,10 @@ resource "aws_subnet" "private_db" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-private-db-subnet-${count.index + 1}"
+      Name = "${var.project_name}-${var.environment}-private-db-subnet-${count.index + 1}"
       Tier = "Database"
     }
   )
@@ -131,9 +141,10 @@ resource "aws_route_table" "public" {
   }
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-public-rt"
+      Name = "${var.project_name}-${var.environment}-public-rt"
     }
   )
 }
@@ -148,9 +159,10 @@ resource "aws_route_table" "private_app" {
   }
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-private-app-rt"
+      Name = "${var.project_name}-${var.environment}-private-app-rt"
     }
   )
 }
@@ -165,9 +177,10 @@ resource "aws_route_table" "private_db" {
   }
 
   tags = merge(
+    local.common_tags,
     var.tags,
     {
-      Name = "${var.project_name}-private-db-rt"
+      Name = "${var.project_name}-${var.environment}-private-db-rt"
     }
   )
 }

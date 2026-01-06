@@ -35,3 +35,24 @@ output "availability_zones" {
   description = "Availability zones used"
   value       = module.networking.availability_zones
 }
+
+# Security Group Outputs
+output "web_sg_id" {
+  description = "ID of the Web security group"
+  value       = module.security.web_sg_id
+}
+
+output "app_sg_id" {
+  description = "ID of the App security group"
+  value       = module.security.app_sg_id
+}
+
+output "db_sg_id" {
+  description = "ID of the DB security group"
+  value       = module.security.db_sg_id
+}
+
+output "all_security_groups" {
+  description = "All security group IDs"
+  value       = module.security.all_sg_ids
+}
