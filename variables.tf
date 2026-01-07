@@ -5,12 +5,6 @@ variable "aws_region" {
   default     = "eu-central-1"
 }
 
-variable "aws_profile" {
-  description = "AWS CLI profile to use for authentication"
-  type        = string
-  default     = "terraform-localAdmin"
-}
-
 # Project Tagging Variables
 variable "project_name" {
   description = "Name of the project for resource tagging"
@@ -44,4 +38,12 @@ variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
   default     = "10.0.0.0/16"
+}
+
+# Database Configuration (for future use with database module)
+variable "db_password" {
+  description = "Database master password"
+  type        = string
+  sensitive   = true
+  default     = "ChangeMe123!"
 }

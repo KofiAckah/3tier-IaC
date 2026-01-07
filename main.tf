@@ -63,6 +63,9 @@ module "alb" {
   health_check_healthy_threshold   = 2
   health_check_unhealthy_threshold = 2
 
+  # Target Instance IDs - will be empty initially, filled after compute module
+  target_instance_ids = []
+
   # Tags
   tags = merge(
     var.common_tags,
@@ -72,4 +75,31 @@ module "alb" {
   )
 
   depends_on = [module.networking, module.security]
+}
+
+# Call the Compute Module
+module "compute" {
+  source = "./modules/compute"
+
+  # Subnet Configuration
+  private_app_subnet_ids = module.networking.private_app_subnet_ids
+
+  # Security Group
+  security_group_id = module.security.app_sg_id
+
+  # Target Group ARNs
+  target_group_arns = [module.alb.target_group_arn]
+
+  # Database Configuration (will be filled after database module is created)
+  db_endpoint = "" # Placeholder - will update after database module
+  db_name     = "tododb"
+  db_username = "admin"
+  db_password = "ChangeMe123!" # Temporary - update in tfvars
+
+  # Tags
+  environment = var.environment
+  project     = var.project_name
+  owner       = var.owner
+
+  depends_on = [module.networking, module.security, module.alb]
 }

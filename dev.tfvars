@@ -5,7 +5,6 @@ owner        = "joel-livingstone-kofi-ackah"
 
 # AWS Configuration
 aws_region  = "eu-central-1"
-aws_profile = "terraform-localAdmin"
 
 # Networking Configuration
 vpc_cidr = "10.0.0.0/16"
@@ -17,3 +16,6 @@ common_tags = {
   CostCenter  = "Development"
   Department  = "Engineering"
 }
+
+# Database Configuration
+db_password = "SecurePassword123!" # Change this to a strong password
