@@ -77,7 +77,57 @@ module "alb" {
   depends_on = [module.networking, module.security]
 }
 
-# Call the Compute Module
+# Call the Database Module
+module "database" {
+  source = "./modules/database"
+
+  # Network Configuration
+  private_db_subnet_ids = module.networking.private_db_subnet_ids
+  db_sg_id              = module.security.db_sg_id
+
+  # Project Configuration
+  project_name = var.project_name
+  environment  = var.environment
+
+  # Database Configuration
+  db_engine            = "mysql"
+  db_engine_version    = "8.0"
+  db_instance_class    = "db.t3.micro"
+  db_allocated_storage = 20
+  db_storage_type      = "gp3"
+  db_storage_encrypted = true
+
+  # Database Credentials
+  db_name     = "tododb"
+  db_username = "admin"
+  db_password = var.db_password
+
+  # Backup Configuration
+  db_backup_retention_period = 7
+  db_backup_window           = "03:00-04:00"
+  db_maintenance_window      = "mon:04:00-mon:05:00"
+
+  # High Availability
+  db_multi_az = false
+
+  # Snapshot Configuration
+  db_skip_final_snapshot = true
+
+  # Deletion Protection
+  db_deletion_protection = false
+
+  # Tags
+  tags = merge(
+    var.common_tags,
+    {
+      Module = "Database"
+    }
+  )
+
+  depends_on = [module.networking, module.security]
+}
+
+# Call the Compute Module (Updated with RDS endpoint)
 module "compute" {
   source = "./modules/compute"
 
@@ -90,16 +140,16 @@ module "compute" {
   # Target Group ARNs
   target_group_arns = [module.alb.target_group_arn]
 
-  # Database Configuration (will be filled after database module is created)
-  db_endpoint = "" # Placeholder - will update after database module
+  # Database Configuration (NOW CONNECTED TO RDS!)
+  db_endpoint = module.database.rds_address
   db_name     = "tododb"
   db_username = "admin"
-  db_password = "ChangeMe123!" # Temporary - update in tfvars
+  db_password = var.db_password
 
   # Tags
   environment = var.environment
   project     = var.project_name
   owner       = var.owner
 
-  depends_on = [module.networking, module.security, module.alb]
+  depends_on = [module.networking, module.security, module.alb, module.database]
 }

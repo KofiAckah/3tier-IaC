@@ -94,7 +94,33 @@ output "instance_2_id" {
   value       = module.compute.instance_2_id
 }
 
-# Summary Output
+# Database Outputs
+output "rds_endpoint" {
+  description = "RDS instance endpoint"
+  value       = module.database.rds_endpoint
+}
+
+output "rds_address" {
+  description = "RDS instance address"
+  value       = module.database.rds_address
+}
+
+output "rds_port" {
+  description = "RDS instance port"
+  value       = module.database.rds_port
+}
+
+output "db_name" {
+  description = "Database name"
+  value       = module.database.db_name
+}
+
+output "db_info" {
+  description = "Complete database information"
+  value       = module.database.db_info
+}
+
+# Complete Deployment Summary
 output "deployment_summary" {
   description = "Complete deployment summary"
   value = {
@@ -102,5 +128,6 @@ output "deployment_summary" {
     alb_dns        = module.alb.alb_dns_name
     instance_ids   = module.compute.instance_ids
     nat_gateway_ip = module.networking.nat_gateway_public_ip
+    rds_endpoint   = module.database.rds_endpoint
   }
 }
