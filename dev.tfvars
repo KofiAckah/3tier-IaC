@@ -18,4 +18,4 @@ common_tags = {
 }
 
 # Database Configuration
-db_password = "SecurePassword123!" # Change this to a strong password
+db_password = "YourSecurePassword123!" # Change this to a strong password

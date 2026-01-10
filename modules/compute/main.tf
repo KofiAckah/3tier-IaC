@@ -1,5 +1,3 @@
-# Compute Module: Two EC2 instances with Todo App
-
 locals {
   common_tags = {
     Environment = var.environment
@@ -17,48 +15,47 @@ resource "aws_instance" "app_1" {
 
   user_data = base64encode(<<-EOF
 #!/bin/bash
-apt-get update -y
-apt-get install -y nodejs npm git
+set -e
 
-# Clone the Todo application from GitHub
-git clone https://github.com/KofiAckah/Todo-App-3Tier.git /var/www/todo-app
+# Update system
+apt-get update -y
+apt-get install -y nodejs npm git curl
+
+# Create application directory
+mkdir -p /var/www/todo-app
 cd /var/www/todo-app
 
-# Install dependencies
+# Clone the Todo application
+git clone https://github.com/KofiAckah/Todo-App-3Tier.git .
 npm install
 
-# Set environment variables for the app
-cat > /etc/environment <<ENVFILE
+# Create .env file with correct variable names
+cat > /var/www/todo-app/.env <<ENVFILE
 DB_TYPE=mysql
 DB_HOST=${var.db_endpoint}
-DB_USER=${var.db_username}
-DB_PASS=${var.db_password}
-DB_NAME=${var.db_name}
 DB_PORT=3306
+DB_NAME=${var.db_name}
+DB_USER=${var.db_username}
+DB_PASSWORD=${var.db_password}
 PORT=80
 ENVFILE
 
-# Create systemd service for the Todo app
-cat > /etc/systemd/system/todo-app.service <<SVCFILE
-[Unit]
-Description=Todo App
-After=network.target
+# Install PM2 globally
+npm install -g pm2
 
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/var/www/todo-app
-EnvironmentFile=/etc/environment
-ExecStart=/usr/bin/node server.js
-Restart=always
+# Set permissions
+chown -R ubuntu:ubuntu /var/www/todo-app
 
-[Install]
-WantedBy=multi-user.target
-SVCFILE
+# Start application with PM2
+cd /var/www/todo-app
+pm2 start server.js --name todo-app
+pm2 startup systemd -u ubuntu --hp /home/ubuntu
+pm2 save
 
-systemctl daemon-reload
-systemctl enable todo-app
-systemctl start todo-app
+# Enable port 80 for non-root user
+setcap 'cap_net_bind_service=+ep' $(which node)
+
+echo "Application deployed successfully" > /var/log/user-data.log
 EOF
   )
 
@@ -79,48 +76,47 @@ resource "aws_instance" "app_2" {
 
   user_data = base64encode(<<-EOF
 #!/bin/bash
-apt-get update -y
-apt-get install -y nodejs npm git
+set -e
 
-# Clone the Todo application from GitHub
-git clone https://github.com/KofiAckah/Todo-App-3Tier.git /var/www/todo-app
+# Update system
+apt-get update -y
+apt-get install -y nodejs npm git curl
+
+# Create application directory
+mkdir -p /var/www/todo-app
 cd /var/www/todo-app
 
-# Install dependencies
+# Clone the Todo application
+git clone https://github.com/KofiAckah/Todo-App-3Tier.git .
 npm install
 
-# Set environment variables for the app
-cat > /etc/environment <<ENVFILE
+# Create .env file with correct variable names
+cat > /var/www/todo-app/.env <<ENVFILE
 DB_TYPE=mysql
 DB_HOST=${var.db_endpoint}
-DB_USER=${var.db_username}
-DB_PASS=${var.db_password}
-DB_NAME=${var.db_name}
 DB_PORT=3306
+DB_NAME=${var.db_name}
+DB_USER=${var.db_username}
+DB_PASSWORD=${var.db_password}
 PORT=80
 ENVFILE
 
-# Create systemd service for the Todo app
-cat > /etc/systemd/system/todo-app.service <<SVCFILE
-[Unit]
-Description=Todo App
-After=network.target
+# Install PM2 globally
+npm install -g pm2
 
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/var/www/todo-app
-EnvironmentFile=/etc/environment
-ExecStart=/usr/bin/node server.js
-Restart=always
+# Set permissions
+chown -R ubuntu:ubuntu /var/www/todo-app
 
-[Install]
-WantedBy=multi-user.target
-SVCFILE
+# Start application with PM2
+cd /var/www/todo-app
+pm2 start server.js --name todo-app
+pm2 startup systemd -u ubuntu --hp /home/ubuntu
+pm2 save
 
-systemctl daemon-reload
-systemctl enable todo-app
-systemctl start todo-app
+# Enable port 80 for non-root user
+setcap 'cap_net_bind_service=+ep' $(which node)
+
+echo "Application deployed successfully" > /var/log/user-data.log
 EOF
   )
 
@@ -132,13 +128,14 @@ EOF
   )
 }
 
-# Attach instances to target group
+# Attach Instance 1 to Target Group
 resource "aws_lb_target_group_attachment" "app_1" {
   target_group_arn = var.target_group_arns[0]
   target_id        = aws_instance.app_1.id
   port             = 80
 }
 
+# Attach Instance 2 to Target Group
 resource "aws_lb_target_group_attachment" "app_2" {
   target_group_arn = var.target_group_arns[0]
   target_id        = aws_instance.app_2.id
